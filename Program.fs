@@ -47,3 +47,36 @@ let f = fun x -> 2 * x + 1
 let f = fun x -> x |> (*) 2 |> (+) 1
 let f = (*) 2 >> (+) 1
 f 3
+
+
+type PesonAge =
+    | Exact of int
+    | Desc of string
+
+let student = Exact(12)
+let name = Desc("Ivan")
+
+let rec fib n =
+    match n with
+    | 0
+    | 1 -> n
+    | n -> fib (n - 1) + fib (n - 2)
+
+fib 10
+
+type SolveResult =
+    | None
+    | Linear of float
+    | Quadratic of float * float
+
+let solve a b c =
+    let D = b * b - 4. * a * c
+
+    if a = 0. then
+        if b = 0. then None else Linear(-c / b)
+    else if D < 0. then
+        None
+    else
+        Quadratic(((-b + sqrt (D)) / (2. * a), (-b - sqrt (D)) / (2. * a)))
+
+let x = solve 1. 2. -3.

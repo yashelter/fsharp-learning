@@ -124,16 +124,65 @@ let f = fun x -> x |> (*) 2 |> (+) 1
 let f = (*) 2 >> (+) 1
 ```
 
+Система типов параметрический полиморфизм.
 
+```fsharp
+// прямая сумма int + string
+type PesonAge =
+    | Exact of int
+    | Desc of string
 
-
-
-
+let student = Exact(12)
+let name = Desc("Ivan")
 
 ```
-Template:
+
+Option type возвращает либо значение если получено, либо None
+Другими словами это тип, который в зависимости от условий, может принимать различные подтипы.
+```fsharp
+// уже в языке
+type 'T option =
+    | Some of 'T
+    | None
+
+// эквивалентно
+type option<'T> =
+    | Some of 'T
+    | None
+
+```
+Удобно создавать свои типы, что бы обрабатывать выходные значения функций.
+[Пример с квадратными уравнениями](https://youtu.be/CYBqdOelIWk?list=PL6XUtJhtlpPM3-1zyn5Ks6n7UB6gs38RS&t=615) 
+```fsharp
+type SolveResult =
+    | None
+    | Linear of float
+    | Quadratic of float * float
+
+let solve a b c =
+    let D = b * b - 4. * a * c
+    if a = 0. then
+        if b = 0. then None 
+        else Linear(-c / b)
+    else if D < 0. then
+        None
+    else
+        Quadratic(((-b + sqrt (D)) / (2. * a), (-b - sqrt (D)) / (2. * a)))
+
+let x = solve 1. 2. -3.
+
+```
+
+Формальные выводы:
+- Статическая типизация лучше динамической, т.к. позволяет дополнительно проверить правильность программы на этапе компиляции.
+- В функциональных языках богатая система типов, включая функц. типы, полиморфизм и дизьюнктное объединение
+- Система типов позволяет хорошо моделировать предметную область.
+
+
+// TODO сопоставление с образцом
+
+
 ```fsharp
 // 
 
-```
 ```
