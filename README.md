@@ -178,9 +178,154 @@ let x = solve 1. 2. -3.
 - В функциональных языках богатая система типов, включая функц. типы, полиморфизм и дизьюнктное объединение
 - Система типов позволяет хорошо моделировать предметную область.
 
+Сопоставление с образцом (например делается с помощью оператора match (что-то) with (список того-то)):
 
-// TODO сопоставление с образцом
+```fsharp
+let print r =
+    match r with
+        | None -> printfn "No Solutions"
+        | Linear(x) -> printfn "x=%f" x
+        | Quadratic(x1, x2) -> printfn "x1=%f, x2=%f" x1 x2
 
+print x // или можно так solve 1. 2. -3. |> print 
+```
+
+Следует обратить внимание в примере выше, на параметры в скобках, те мы по факту явно указываем чего ожидаем от `r`
+
+Однако помимо типа, можно указать и условие, а также выбрать остальные результаты (else) с помощью `_`
+```fsharp
+let print r =
+    match r with
+        | None -> printfn "No Solutions"
+        | Linear(x) -> printfn "x=%f" x
+        | Quadratic(x1, x2) when x1=x2-> printfn "x1=x2=%f" x1 // условие
+        | Quadratic(x1, x2) -> printfn "x1=%f, x2=%f" x1 x2
+        | _ -> printfn "Not expected?" // пример else
+
+print x // или можно так solve 1. 2. -3. |> print 
+```
+
+Однако не обязательно явно использовать оператор match, можно сделать тоже самое с помощью function:
+```fsharp
+let print r = function
+        | Linear(x) -> printfn "x=%f" x
+        | Quadratic(x1, x2) when x1=x2-> printfn "x1=x2=%f" x1
+        | Quadratic(x1, x2) -> printfn "x1=%f, x2=%f" x1 x2
+        | _ -> printfn "Not expected?"
+
+print x
+```
+От сюда возникает вопрос в отличии задания анонимных функций с помощью `function` и `fun`
+fun vs. function
+`fun`
++ Поддерживает несколько аргументов в каррированной форме: fun xу-> ...
++ Не поддерживает pattern matching function
+
+`function`
++ Поддерживает только один аргумент (возможно, tuple)
++ Поддерживает pattern matching с несколькими вариантами описания
+
+Пример сопоставления пар:
+```fsharp
+let order = function
+    | (x1, x2) when x2>x1 -> (x2, x1)
+    | _ as pair -> pair
+
+order (2, 4)
+```
+
+```fsharp
+let x1, x2 = 'u', 'v' // попарное присвоение 
+
+// пример реализации встроенных fst и snd
+// также работают через сопоставление с образцом
+let fst (x1, x2) = x1 
+let snd (x1, x2) = x2
+```
+
+И весь смысл pattern matching, что удобнее чем условный оператор, и часто применяется неявно
+
+### Рекурсия
+
+```fsharp
+let rec factorial n = 
+    if n=1 then 1
+    else n*factorial (n-1)
+
+factorial 5
+```
+
+```fsharp
+let rec factorial = function
+    | 1 -> 1
+    | n -> n * factorial(n-1)
+
+
+factorial 5
+```
+// TODO: про рекурсию и хвостовую
+
+### Списки, алгебраические типы \3
+В функциональных языках нет, и не может быть массивов (тк это область памяти, а у нас тут константы всё), поэтому вместо них используются списки // уточнить момент
+
+
+Список в f# похож на список prolog'a (Elem, (Tail)), где Tail продолжение списка (другой список, возможно пустой `Nil`)
+
+Пример списка и функции поиска его длины
+```fsharp
+//type 't list = Nil | Cons of 't * 't list // можно так
+type list<'t> = Nil | Cons of 't * list<'t> // или так
+
+let empty = Nil
+let otf = Cons(1, Cons(2, Cons(3, Nil)))
+
+// при том такой тип решения самый хороший
+let rec get_length = function
+  | Nil -> 0
+  | Cons(_, tail) -> 1 + get_length tail
+
+get_length otf // 3
+
+// Todo сортировка и вставка с сохранением порядка
+```
+
+Хвост списка можно отделять с помощью оператора `Head_Lst::Tail_Lst` (либо вставлять)
+
+Свёртка (fold) в F# - это функция высшего порядка, которая применяет некоторую операцию к элементам списка, последовательно сворачивая его до одного значения. Эта операция может быть суммированием, умножением, конкатенацией или любой другой операцией, определенной пользователем.
+```fsharp
+val List.fold : ('State -> 'T -> 'State) -> 'State -> 'T list -> 'State
+```
+
+Аналогом является Reduce, которая по факту такая же, но без использования начального значения.
+
+
+```fsharp
+// fold example
+let rec fold_ f i= function
+    | [] -> i
+    | h::t -> f (fold_ f i t)
+
+// reduce example
+let rec reduce_ f = function
+    | [] -> failwith "Error"
+    | [x] -> x
+    | h::t -> f (reduce_  f)
+```
+
+```fsharp
+// todo вставить функции списка
+```
+
+```fsharp
+// решето эратосфена
+let lst = [2..100]
+
+let rec simple = function
+    | []  -> []
+    | h::t -> h::simple(List.filter (fun x -> x % h<>0) t)
+    
+simple lst
+```
 
 ```fsharp
 // 

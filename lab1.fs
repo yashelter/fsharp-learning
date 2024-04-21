@@ -1,4 +1,4 @@
-let epsilon = 1e-8
+let epsilon = 1e-18
 
 let rec iter f acc i b =
     if i <= b then f (iter f acc (i + 1) b) i else acc
@@ -32,7 +32,6 @@ let dumb_tailor x = dumb_tailor_eq x 0. 1
 
 
 //Smart tailor, using previous equations
-
 let rec smart_tailor_eq x summ n prev =
     // формула зависит не от члена, а от пред. суммы
     let crnt = funct_prev x summ

@@ -80,3 +80,13 @@ let solve a b c =
         Quadratic(((-b + sqrt (D)) / (2. * a), (-b - sqrt (D)) / (2. * a)))
 
 let x = solve 1. 2. -3.
+
+let print =
+    function
+    | None -> printfn "No Solutions"
+    | Linear(x) -> printfn "x=%f" x
+    | Quadratic(x1, x2) when x1 = x2 -> printfn "x1=x2=%f" x1 // условие
+    | Quadratic(x1, x2) -> printfn "x1=%f, x2=%f" x1 x2
+    | _ -> printfn "Not expected?" // пример else
+
+print x
