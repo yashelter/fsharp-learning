@@ -327,6 +327,31 @@ let rec simple = function
 simple lst
 ```
 
+Надо стараться при обходе списков использовать хвостовую рекурсию(и вообще всегда), тк она не требует дополнительного расхода памяти и может быть оптимизирована компилятором (тк по факту не требуются возвраты к начальному контексту)
+
+```fsharp
+// пример такого метода fold
+let lst = [1..100]
+
+let fold f i lstt = 
+    let rec fold' acc = function
+        | [] -> acc
+        | h::t -> fold' (f h acc) t
+    fold' i lstt
+    
+let result = fold (+) 0 lst
+printfn "%d" result
+```
+
+Конкатенация списков
+```fsharp
+let f x acc = x::acc
+
+let filteredList = List.foldBack f [1..10] [11..20] 
+
+printfn "%A" filteredList
+```
+Левая свёртка эффективней правой
 ```fsharp
 // 
 
