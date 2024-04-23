@@ -10,7 +10,7 @@ open System.Reflection
 [<assembly: System.Reflection.AssemblyCompanyAttribute("FirstIonideProject")>]
 [<assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")>]
 [<assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")>]
-[<assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+43de946047ff47973388881c1eea078f6b8e00d6")>]
+[<assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5d88cbca2c600fe5cee911e944d45c4044901d5c")>]
 [<assembly: System.Reflection.AssemblyProductAttribute("FirstIonideProject")>]
 [<assembly: System.Reflection.AssemblyTitleAttribute("FirstIonideProject")>]
 [<assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")>]

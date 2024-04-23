@@ -351,7 +351,310 @@ let filteredList = List.foldBack f [1..10] [11..20]
 
 printfn "%A" filteredList
 ```
+
 Левая свёртка эффективней правой
+
+У списков много различных методов, которые я потом мб вставлю сюда, но они все видны в IDE и в случае чего гуглятся (и не особо вижу смысл учить)
+
+```fsharp
+// paste here
+
+```
+
+Пример реализации поиска среднего значения в списке
+```fsharp
+let lst = [1..100]
+
+let f acc elem = (fst acc + elem, snd acc + 1)
+
+let getAverage L = 
+    let (n, cnt) = List.fold f (0, 0) L
+    float n / float cnt
+
+getAverage lst
+```
+
+Транспонирование матрицы (на самом деле списка)
+```fsharp
+let rec slice = function
+    | [] -> ([], [])
+    | h::t ->
+        let (u, v) = slice t
+        (List.head h ::u, List.tail h ::v)
+
+slice [[1;2;3];[4;5;6]]
+
+
+let rec transpon = function
+| []::_  -> []
+| x  ->
+    let (h, r) = slice x
+    h::(transpon r)
+
+transpon [[1;2;3];[4;5;6]]
+```
+
+### Деревья \4
+
+Дерево общего вида типа T это - 
++ Элемент типа Т с присоединёнными к нему деревьями типа Т
++ Формально связанный граф без циклов
++ Пустого дерева общего вида не существует
+
+Описание задания простого дерева
+```fsharp
+type 'T tree =
+    | Leaf of 'T
+    | Node of 'T * ('T tree list)
+
+let tr = Node(1, 
+            [Node(2,
+                [Leaf(5)]);
+            Node(3,[
+                Leaf(6);
+                Leaf(7)]);
+            Leaf(4)])
+```
+
+Свёртка и отображение (map), достаточно тривиальны, можно позже описать как задание
+```fsharp
+// paste here
+
+```
+
+Абстрактное синтаксическое дерево. Это максимально похоже на задание курсовой 
+```fsharp
+//  самое интересное что оно работает!
+type 't Expr =
+    | Add of 't Expr * 't Expr
+    | Sub of Expr<'t> * Expr<'t>
+    | Neg of 't Expr
+    | Value of 't
+
+let rec compute = function
+    | Add(x,y) -> compute x + compute y
+    | Sub(x,y) -> compute x - compute y
+    | Neg(x) -> - compute x 
+    | Value(x) -> x
+
+compute(Add(Neg(Value(5)), Sub(Value(5),Value(1)))) // -5 + 5 - 1 = -1
+```
+
+
+```fsharp
+// вставить коды из 4.3 4.4 (там деревья и новая структура zippers )
+
+```
+
+### Приёмы функционального программирования \5
+
+Замыкание - совокупность функции и контекста: значений всех свободных переменных входящих в эту функцию, зафиксированных в момент определения функции
+
+```fsharp
+// вот такой пример для понимания
+let x = 1
+let f z = x+z
+f 1
+
+let x = 2 // но если скомпилить целиком ошибка
+f 1
+```
+
+И в f# есть динамическое связывание
+```fsharp
+// новое старое слово
+let mutable x = 1 // теперь тут ссылка
+let f z = x+z
+f 1
+
+x <- 2 // ! внимание на изменение !
+f 1
+```
++ Замыкание это внутренние и внешние переменные
++ Замыкания позволяют сохранять внутри функции некоторое состояние
++ Изменяемые переменные - штука для изменения состояния (императивный прикол, не функциональный уже считается)
+
+Подсчёт суммы списка
+```fsharp
+// с mutable
+let lst = [1..100]
+
+let mutable res = 0
+
+let rec f = function
+    | [] -> None
+    | h::t -> 
+        res <- (res + h) 
+        f t
+f lst
+printf "%d" res
+```
+
+```fsharp
+// получаем каждый раз новое простое число
+let lst = [2..100]
+
+let rec simple = function
+    | [] -> []
+    | h::t -> h::simple(List.filter (fun x -> x % h <>0) t)
+
+let mutable simpels = simple lst
+
+let get_simple = function 
+    | [] -> 0
+    | h::t ->
+        simpels <- t
+        h
+
+let f = get_simple simpels
+```
+
+Генераторы - штука, которая (генерирует) последовательность (возможно бесконечную). Те это иное представление списка, хотя при этом абстракция. Это пример ленивых (отложенных вычислений)
+```fsharp
+// генератор общего вида
+let new_generator fgen init =
+    let mutable x = init
+    fun () ->
+        x <- fgen x;x
+
+// модификация генератора
+let map f gen = 
+    fun() -> f (gen())
+
+// фильтр для генератора
+let rec filter cond gen =
+    fun() ->
+        let x = gen()
+        if cond x then x
+        else (filter cond gen) ()
+
+// взятие n элементов у генератора
+let rec take n gen =
+    if n=0 then[]
+    else gen()::take(n-1) gen
+
+
+let fibgen = new_generator (fun (u, v) -> (u+v,u)) (1, 1)
+
+// example
+fibgen |> map fst |> take 10
+```
+
+Последовательности - тип данных похожий на список и генератор. (LazyList .Net (но с кэшированием результатов)) Те элементы могут не вычисляться до 1го обращения
+
+```fsharp
+// методы задания
+let squares = Seq.initInfinite(fun n -> n*n)
+let squares10 = Seq.init 10 (fun n ->n*n)
+
+
+seq {1..100}
+seq {for x in 1..10 -> x*x}
+seq {for x in 1..10 do
+        if x%3=0 then yield x*x}
+
+```
+
+
+```fsharp
+// do 5.3 lesson (13:00)
+
+```
+```
+// способы задать факториал, это ответ на 1 из
+
+let fact n =  [1..n] |> List.reduce (*)
+
+let fact n = seq {1..n} |> Seq.reduce (*)
+
+// (..) оператор задания последовательности
+let fact  = (..) 1 >> Seq.reduce (*) 
+
+let fact n = Seq.initInfinite ((+) 1) |> Seq.scan (*) 1 |> Seq.nth n
+```
+
+Корекурсия - определение рекуррентной бесконечной последовательности структурно эквивалентное рекурсии. Обычно пораждает бесконечные последовательности
+
+```fsharp
+// пример определения корекурсии
+let rec ones = seq{
+    yield 1;
+    yield! ones;
+}
+
+ones |> Seq.take 10 //1 1 1..
+```
+
+```fsharp
+// ещё пример определения корекурсии
+let rec nat = seq{
+    yield 0
+    yield! 
+        Seq.map ((+) 1) nat
+}
+
+nat |> Seq.take 10 // 0..10
+```
+
+</br>
+
+Следующий прикол - продолжения - штука позволяющая сводить нелинейную рекурсию к хвостовой
+
+Как мне кажется не очень обязательная штука. Она также применима к деревьям [смотреть 5.5](https://www.youtube.com/watch?v=CKeGcqg0pI8&list=PL6XUtJhtlpPM3-1zyn5Ks6n7UB6gs38RS&index=28)
+```fsharp
+// пример продолжений для длины списка
+let len L =
+    let rec len' cont = function
+        | [] -> cont 0
+        | h::t -> len' (fun x -> cont(x+1)) t
+    len' (fun x->x) L 
+// те до конца вычислений мы собираем длинную конструкцию в виде функций
+// а как дошли вычисляем его
+// мы обошлись без аккумулятора и получили хвостовую рекурсию
+```
+
+Далее, Мемоизация - запоминание вычесленных значений, для оптимизации. Применимо когда каждому входному -> единственное выходное всегда. 
+
+Мы жертвуем памятью на скорость. Данный приём иногда применяется в добрых алгоритмах (в том числе на олл проге).
+```fsharp
+// вот общая идея
+open System.Collections.Generic
+
+let memoize (f: 'a -> 'b) = 
+    let t = new Dictionary<'a,'b>() // c# hi
+    fun n -> 
+        if t.ContainsKey(n) then t.[n]
+        else let res = f n 
+             t.Add(n, res) 
+             res
+
+
+let rec fibFast = 
+    memoize(
+    fun n -> if n < 2 then 1
+             else fibFast(n-1) + fibFast(n-2))
+```
+
+```fsharp
+// 
+
+```
+
+```fsharp
+// 
+
+```
+
+```fsharp
+// 
+
+```
+
+```fsharp
+// 
+
+```
+
 ```fsharp
 // 
 
