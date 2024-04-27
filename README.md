@@ -294,7 +294,16 @@ let rec factorial = function
 
 factorial 5
 ```
-// TODO: про рекурсию и хвостовую
+
+```fsharp
+// пример хвостовой рекурсии
+let rec factorial n acc = 
+    if n=1 then acc
+    else factorial (n-1) (acc * n)
+
+factorial 5 1
+```
+// TODO: про рекурсию
 
 ### Списки, алгебраические типы \3
 В функциональных языках нет, и не может быть массивов (тк это область памяти, а у нас тут константы всё), поэтому вместо них используются списки // уточнить момент
@@ -311,15 +320,21 @@ let empty = Nil
 let otf = Cons(1, Cons(2, Cons(3, Nil)))
 
 // при том такой тип решения самый хороший
-let rec get_length = function
-  | Nil -> 0
-  | Cons(_, tail) -> 1 + get_length tail
+let rec get_length (acc:int) = function
+  | Nil -> acc
+  | Cons(_, tail) -> get_length  (acc + 1) tail
 
-get_length otf // 3
+get_length 0 otf  // 3
 
 // Todo сортировка и вставка с сохранением порядка
 ```
 
+```fsharp
+// задание списка пример
+let squares = [   for i in 1 .. 20 do
+                    if i % 5 = 0 then
+                        yield i]
+```
 Хвост списка можно отделять с помощью оператора `Head_Lst::Tail_Lst` (либо вставлять)
 
 Свёртка (fold) в F# - это функция высшего порядка, которая применяет некоторую операцию к элементам списка, последовательно сворачивая его до одного значения. Эта операция может быть суммированием, умножением, конкатенацией или любой другой операцией, определенной пользователем.
@@ -332,15 +347,24 @@ val List.fold : ('State -> 'T -> 'State) -> 'State -> 'T list -> 'State
 
 ```fsharp
 // fold example
-let rec fold_ f i= function
+let rec fold_ f i = function
     | [] -> i
-    | h::t -> f (fold_ f i t)
+    | h::t -> f (fold_ f i t) h
+    | _ as list -> 
+        let t = List.tail list
+        let h = List.head list
+        f (fold_ f i t) h
+
+
+fold_ (+) 0 [1..100]
 
 // reduce example
 let rec reduce_ f = function
     | [] -> failwith "Error"
     | [x] -> x
-    | h::t -> f (reduce_  f)
+    | h::t -> f (reduce_  f t) h
+
+reduce_ (+) [1..100]
 ```
 
 ```fsharp
