@@ -568,10 +568,19 @@ let tr = Node(1,
             Leaf(4)])
 ```
 
-Свёртка и отображение (map), достаточно тривиальны, можно позже описать как задание
+Свёртка и отображение (map), достаточно тривиальны:
 ```fsharp
-// paste here
+// отображение
+let rec map f = function
+    | Leaf(x)  -> Leaf(f, x)
+    | Node(x, l) ->
+        Node (f x,  List.map (map f ) l)
 
+// свёртка
+let rec fold f i = function
+    | Leaf(x) -> f i x
+    | Node(x, l) -> 
+        List.fold (fold f) (f i x) l
 ```
 
 Абстрактное синтаксическое дерево. Это максимально похоже на задание курсовой 
@@ -592,11 +601,109 @@ let rec compute = function
 compute(Add(Neg(Value(5)), Sub(Value(5),Value(1)))) // -5 + 5 - 1 = -1
 ```
 
+Также существуют двоичные деревья. Любое дерево общего вида может быть преобразовано к двоичному. В [4.2 можно подробнее ознакомиться](https://www.youtube.com/watch?v=tyRXyp1C3Ds&list=PL6XUtJhtlpPM3-1zyn5Ks6n7UB6gs38RS&index=21)
 
 ```fsharp
-// вставить коды из 4.3 4.4 (там деревья и новая структура zippers )
-
+// here maybe approach bin-trees
 ```
+
+Далее упомяну что в F# можно создать BST, и был разобран его код, а также вставка в него. На примере показал как его использовать для поиска в по тексту [4.3](https://www.youtube.com/watch?v=i84485v0bQM&list=PL6XUtJhtlpPM3-1zyn5Ks6n7UB6gs38RS&index=22). Так как код большой(хотя не очень сложный), и запоминать не очень хочется, как и переписывать, просто оставлю ссылку, и понадеюсь что не пригодится. А также всякие деревья уже есть в .NET, в частости есть словарь `XD`, так что как будто можно пропустить.
+
+#### Структуры продолжение 
+
+Реализация наивной очереди
+
+```fsharp
+type 'a sillyqueue = 'a list
+
+let rec put x = function
+    | [] -> [x]
+    | h::t -> h::(put x t)
+
+let take = function
+    | [] -> failwith "empty"
+    | h::t -> (h, t)
+
+let emptyq = []
+```
+
+Умная очередь - храним два списка, добавляем во второй, берём из первого, когда элементы в первом заканчиваются, перестраиваем его, копированием обратного второго:
+```fsharp
+type 'a queue = 'a list * 'a list
+
+let tail (L,R) = 
+    match L with
+    | [x] -> (List.rev R, [])
+    | h::t -> (t, R)
+
+let head (h::_,_) = hash
+
+let put x (L, R) =
+    match L with
+    | [] -> ([x], R)
+    | _ -> (L, x::R)
+
+let empty = ([],[])
+```
+
+Zippers - аналог двунаправленных списков, идейно похоже на умную очередь.
+```fsharp
+type 't ZipperList = 't list * 't list
+
+let zip l :ZipperList<'t> = ([], l)
+let unzip (l,r) = (List.rev l) @ r
+
+let right (l, h::t) = (h::l, t)
+let left (h::t, r) = (t, h::r)
+let update x (l, h::r) = (l, x::r)
+let insert x (l,r) = (l, x::r)
+
+zip [1..3] |> right |> update 0 |> unzip
+```
+
+Zipper для дерева
+Эвристики:
++ текущий элемент определяется путём до вершины
++ чтобы полностью определить дерево с текущим элементом, нужно хранить текущее поддерево + путь до него со всеми элементами для восстановления дерева
+    - идя направо запоминаем левое поддерево
+    - идя налево - правое
++ каждый шаг выворачивает дерево
+
+
+```fsharp
+type 'T tree =
+    | Leaf of 'T
+    | Node of 'T * 'T tree * 'T tree
+
+let sample = Node ('+',  
+    Node('*', Leaf('1'), Leaf('2')), 
+    Node('*', Node('+', Leaf('3'), Leaf('4')), Leaf('5')))
+
+type 't crumb = 
+    | Left of 't * 't tree 
+    | Right of 't * 't tree
+
+type 't  TreeZipper = 't tree * 't crumb list
+
+let zip t : 't TreeZipper = (t,[])
+
+let left (Node(x,l,r), path) = (l, Left(x,r)::path)
+let right (Node(x,l,r), path) = (r, Right(x, l)::path)
+
+let update value (current, path)  =
+    match current with 
+    | Node(x, left, right) -> (Node(value, left, right), path)
+    | Leaf(x) -> (Leaf(value), path)
+
+let up (t, p) =
+    match p with
+    | Left (x,r)::xs -> (Node(x,t,r), xs)
+    | Right (x, l)::xs -> (Node(x,l,t), xs)
+
+zip sample |> right |> left |> update '0' |> up |> up
+```
+
+Важное преимущество : Zipper'ы позволяют модифицировать текущий, не перестраивая всей структуры
 
 ### Приёмы функционального программирования \5
 
@@ -626,6 +733,7 @@ f 1
 + Замыкания позволяют сохранять внутри функции некоторое состояние
 + Изменяемые переменные - штука для изменения состояния (императивный прикол, не функциональный уже считается)
 
+#### Примеры задач с mutable и замыканием
 Подсчёт суммы списка
 ```fsharp
 // с mutable
@@ -642,8 +750,8 @@ f lst
 printf "%d" res
 ```
 
+Генератор простых чисел
 ```fsharp
-// получаем каждый раз новое простое число
 let lst = [2..100]
 
 let rec simple = function
@@ -692,6 +800,7 @@ let fibgen = new_generator (fun (u, v) -> (u+v,u)) (1, 1)
 fibgen |> map fst |> take 10
 ```
 
+#### Последовательности
 Последовательности - тип данных похожий на список и генератор. (LazyList .Net (но с кэшированием результатов)) Те элементы могут не вычисляться до 1го обращения
 
 ```fsharp
@@ -712,7 +821,7 @@ seq {for x in 1..10 do
 // do 5.3 lesson (13:00)
 
 ```
-```
+```fsharp
 // способы задать факториал, это ответ на 1 из
 
 let fact n =  [1..n] |> List.reduce (*)
@@ -808,6 +917,7 @@ let bind a f =
 
 bind (read()) (fun x -> bind (read()) (fun y -> Some(x+y)))
 ```
+
 ### Бонусы \7
 > Тут чисто тезисно, пока не понадобится в использовании, так как на экзамен вряд ли будет вынесено, но чисто идейно может пригодиться.
 
@@ -850,14 +960,3 @@ let mood (s:string) =
             | Neutral -> z) 0
 ```
 Далее упомяну, что шаблоны могут использоваться в регулярных выражениях, если вдруг понадобится есть в лекции 7.2. Ну и есть инструмент для графиков FsharpChart
-
-
-```fsharp
-// 
-
-```
-
-```fsharp
-// 
-
-```
