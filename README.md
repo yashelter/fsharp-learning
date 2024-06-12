@@ -185,7 +185,6 @@ type option<'T> =
 
 ```
 Удобно создавать свои типы, что бы обрабатывать выходные значения функций.
-[Пример с квадратными уравнениями](https://youtu.be/CYBqdOelIWk?list=PL6XUtJhtlpPM3-1zyn5Ks6n7UB6gs38RS&t=615) 
 ```fsharp
 type SolveResult =
     | None
@@ -601,13 +600,7 @@ let rec compute = function
 compute(Add(Neg(Value(5)), Sub(Value(5),Value(1)))) // -5 + 5 - 1 = -1
 ```
 
-Также существуют двоичные деревья. Любое дерево общего вида может быть преобразовано к двоичному. В [4.2 можно подробнее ознакомиться](https://www.youtube.com/watch?v=tyRXyp1C3Ds&list=PL6XUtJhtlpPM3-1zyn5Ks6n7UB6gs38RS&index=21)
-
-```fsharp
-// here maybe approach bin-trees
-```
-
-Далее упомяну что в F# можно создать BST, и был разобран его код, а также вставка в него. На примере показал как его использовать для поиска в по тексту [4.3](https://www.youtube.com/watch?v=i84485v0bQM&list=PL6XUtJhtlpPM3-1zyn5Ks6n7UB6gs38RS&index=22). Так как код большой(хотя не очень сложный), и запоминать не очень хочется, как и переписывать, просто оставлю ссылку, и понадеюсь что не пригодится. А также всякие деревья уже есть в .NET, в частости есть словарь `XD`, так что как будто можно пропустить.
+Также существуют двоичные деревья. Любое дерево общего вида может быть преобразовано к двоичному
 
 #### Структуры продолжение 
 
@@ -628,6 +621,7 @@ let emptyq = []
 ```
 
 Умная очередь - храним два списка, добавляем во второй, берём из первого, когда элементы в первом заканчиваются, перестраиваем его, копированием обратного второго:
+
 ```fsharp
 type 'a queue = 'a list * 'a list
 
@@ -862,7 +856,6 @@ nat |> Seq.take 10 // 0..10
 
 Следующий прикол - продолжения - штука позволяющая сводить нелинейную рекурсию к хвостовой
 
-Как мне кажется не очень обязательная штука. Она также применима к деревьям [смотреть 5.5](https://www.youtube.com/watch?v=CKeGcqg0pI8&list=PL6XUtJhtlpPM3-1zyn5Ks6n7UB6gs38RS&index=28)
 ```fsharp
 // пример продолжений для длины списка
 let len L =
@@ -973,10 +966,269 @@ let r = nondet {
 + Монада (нестрого) - некоторый обрамляющий тип + набор специальных операций.
 + Монада позволяет описывать в явном виде последовательность некоторых операций, семантику выполнения которых мы можем менять.
 
+Теория категорий, типизация и функциональное программирование
++ Взгляд на теорию функционального программирования на основе очень абстрактного математического понятия
++ Изучает взаимосвязь понятий без привязки к их внутренней структуре
++ Применяется в: 
+    - Топологии
+    - Теоретической физике
+    - Информатике
+
+Категории
+Определение - это семейство объектов Ob(K), и семейство морфизмов ("стрелок") Mor(K)
+- ∀ f : A → B, g: B → C  $\exists$ g $\circ$ f : A → C (композиция)
+- ∀ A ∈ Ob(K), $\exists$ Id$_{A}$: A → A (единичная стрелка)
+- ∀ f, g, h ∈ Mor(K): (f $\circ$ g) $\circ$ h = f $\circ$ (g $\circ$ h) (ассоциативность)
+- ∀ f : A → B имеет место f $\circ$ Id$_{A}$ = Id$_{B}$ $\circ$ f = f (свойство единицы)
+
+// TODO: картиночка
+
+Примеры категорий:
++ Категория из одного объекта
++ Граф пораждает категории
++ Отношение порядка пораждает категорию
++ Категория всех множеств Set (каждый объект множество, "стрелки" - функции)
++ Категория всех типов\функций ЯП (надо рассматривать возможную незавершимость функций)
+
+Двойственные категории - такие категории, что "стрелки" повернули наоборот. Удобны для доказательств (по двойственности... ).
++ Ob(K) = Ob($K_{duo}$)
++ ∀ f : A → B ∈ Mor(K), $\exist$f: B → A  ∈ Mor($K_{duo}$)
+
+Начальный и терминальный объект
+- $A \in Ob(K)$ - начальный объект, если $\forall B \in Ob(K) \ \exists ! f : A \rightarrow B$ 
+    + Из него идут стрелки во все другие объекты
+- $A \in Ob(K)$ - терминальный объект, если $\forall B \in Ob(K) \ \exists ! f : B \rightarrow A$ 
+    + из каждого объекта сюда приходит одна стрелка
+
+Пример начальные и терминальные объекты в Set:
++ absurd: void $\rightarrow$ 't - начальный
++ unit: `let Unit _ = ()`
+
+Функторы
+
+- Функтор $F$ – это отображение двух категорий $K_1$ и $K_2$
+- Функтор должен сохранять свойства композиции
+- $F : Ob(K_1) \rightarrow Ob(K_2)$
+- $F : Mor(K_1) \rightarrow Mor(K_2)$
+
+Свойства:
+- $F(Id_A) = Id_{F(A)}$
+- Если $f : A \rightarrow B$, то $F \ f : F(A) \rightarrow F(B)$
+- $F(f \circ g) = F(f) \circ F(g)$
+
+<details>
+<summary>Примеры некоторых функторов</summary>
+Конструктор : `fmap: (a->b) -> (F a -> F b)`
+
+Some: 
+```fsharp
+let fmap f = function 
+    | None -> None
+    | Some(x) -> Some(f x)
+```
+
+[]: 
+```fsharp
+List.map
+```
+
+Дерево типа t: 
+```fsharp
+Tree Map
+```
+</details>
+
+Функтор отображающий категорию в саму в себя, называется <u><b>эндофунктором</u></b>
+
+Функтор Some на f#:
+```fsharp
+let fmap f = function
+    | None -> None
+    | Some(x) -> Some(f x)
+
+fmap ((+) 1) (Some 10)
+
+let ($) f x = fmap f x // производит лифтинг?
+(+) 1 $ Some(10) 
+
+```
+Лифтинг - подъём на уровень функтора (5 -> 6 : Some(5) -> Some(6)). Те повышение абстрактности.
+
+Аппликативные функторы - функторы, для которых мы рассматриваем исходные фукнкции в пространстве функторного типа
+
+```fsharp
+let (<*>) f x = // example
+    match f, x with
+        | None, _ -> None
+        | _, None -> None
+        | Some(f), Some(x) -> Some(f x)
+
+(Some (+)) <*> Some(1) <*> Some(2) // Some 3
+```
+`Some((+))` - можно записать как функцию `Pure(f)`, которая будет поднимать функции
+
+```fsharp
+let (<!>) a b =
+    let mas = (fun f -> List.map f b) // для другой функции на вход, вернёт список, где для каждого элемента применит входную функцию
+    let first = List.map mas a // применим для списка a
+    first |> List.concat 
+
+let res = [(+)1;(-)1] <!> [1;2]
+printfn "%A" res
+
+let pure f = [f]
+pure (+) <!> [1..2] <!> [3..4]
+```
+
+Задача. Надо расставить знаки(+,-,\*) между числами в списке, и посчитать все возможные значения. `[1;2] -> [1*2;1-2;1+2]`
+
+```fsharp
+let rec split = function
+    | [x] -> []
+    | h::t -> ([h], t)::(List.map (fun (a, b) -> (h::a, b)) (split t))
+
+split([1..10])
+
+// все варианты расстановки знаков между числами в списке
+let rec values = function
+    | [] -> []
+    | [x] -> [x]
+    | Lst -> 
+        let variats = split Lst
+        let res = List.map (fun (l, r) -> [(+);(-);(*)] <!> (values l) <!> (values r)) variants
+        List.distinct (List.concat res)
+
+```
+
+Произведения и ко-произведения.
+### Категориальное определение пары
+
+- Произведение $A, B \in Ob(K)$ это:
+  - Объект $C \in Ob(K)$
+  - Пара стрелок $\text{fst}: C \rightarrow A$, $\text{snd}: C \rightarrow B$ (проекции)
+
+- При этом $\forall D \in Ob(K)$ и $g_1 : C \rightarrow A$, $g_2 : C \rightarrow B$ $\exists ! f : D \rightarrow C$
+
+- В категории Set произведение – это $A \times B$
+
+*Произведение определяется с точностью до изоморфизма*
+
+Алгебраические типы данных можно определять на основе произведения и суммы. 
+Например
+|Значение|Тип|
+|---|---|
+|1|()|
+|a + b|Either a b = Left a | Right b|
+|a * b|(a, b)|
+|2 = 1 + 1|type Bool = True | False|
+|1 + a|type 't option = None | Some 't|
+|0 * a|(Void, 'a)|
+|a \* (b + c) = a \* b +a \* c| ('a, Left 'b \| Right 'c) = Left ('a, 'b) \| Right('a, 'c)|
+|1 + 't * x|list<'t> = Nil \| Const 't * list<'t>|
+
+Монады.
+>Монады это моноид в категории эндофункторов
+Монады позволяют описать цепочку операций, где что то может пойти не так
+
+```fsharp
+let good x = Some(x+1)
+let bad x = None
+
+let (>>=) x f = 
+    match x with
+        | Some(z) -> f z
+        | None -> None
+
+Some(1) >>= good // Some(2)
+Some(1) >>= bad  >>= good // None
+```
+
+Те это такая штука, которая за нас обработает данные, если они станут плохими в какой то момент, убирая большую вложенность блоков `if-else`
+Математически называется категория Клейси(>=>(fish operator)), отличие с bind(>>=), что на вход уже подаётся обёрнутое значение.
+
+Сравнение 
+|Название|Функция|
+|---|---|
+|Функтор|`fmap (a->b) -> F a -> F b`|
+|Аппликативный функтор|`<*> : F (a -> b) -> F a -> F b` <br>`pure f : (a -> b) -> F(a -> b)`|
+|Монада|`>>= : M a -> (a -> M b) -> M b` <br>`>=> : (a -> M b) -> (b -> M c) -> (a -> M c)` <br> `return: a -> M a`|
+
+Оптика - набор функциональных абстракций позволяющих работать со сложными структурами данных
+Линзы решают задачу выделения конкретного места в какой-то структуре данных
+
+Пример линз с применением
+```fsharp
+type Content = 
+    | String of string 
+    | Body of Content list
+    | Collection of Content list
+    | Paragraph of Content
+    | Header of int * Content
+    | Bold of Content
+    | ItemList of Content
+    | TableRow of Content list
+    | Table of Content list
+
+let doc = Body([
+    Header(1, String "title");
+    Paragraph(String("This is introduction"));
+    Table([
+        TableRow([String("Item 1"); String("$1")]);
+        TableRow([String("Item 2"); String("$2")]);
+        ])
+])
+
+// пример для списка
+type Get_function<'t, 'a> = ('t -> 'a)
+type Update_function<'t, 'a> = ('t -> 'a -> 't) 
+type Lense<'t, 'a> =  Get_function<'t, 'a> * Update_function<'t, 'a>
+
+
+let get_func lense position = fst lense position
+let update_func lense position = snd lense position
+
+let main_lense n = Lense(
+    (fun (lst:List<'t>) -> lst.[n]),
+    (fun lst new_element -> List.mapi (fun i t -> if i=n then new_element else t) lst)
+)
+
+let lst = [1..10]
+get_func (main_lense 2) lst
+let lst' = update_func (main_lense 2) lst -5
+get_func (main_lense 2) lst'
+
+let inline (.>) (xget, xset) (yget, yset) = 
+   (xget >> yget), 
+   (fun matrix element -> xset matrix (yset (xget matrix) element))
+
+
+let mtx = [[1; 2; 3; 4; 5]; [6; 7; 8; 9; 10]]
+get_func (main_lense 1 .> main_lense 1) [[1; 2; 3; 4; 5]; [6; 7; 8; 9; 10]]
+update_func (main_lense 1 .> main_lense 1) [[1; 2; 3; 4; 5]; [6; 7; 8; 9; 10]] 0
+
+
+let body = Lense(
+    (function Body(x) -> x),
+    (fun _ x -> Body(x))
+)
+let par = Lense(
+    (function Paragraph(x) -> x),
+    (fun _ x -> Paragraph(x))
+)
+let table = Lense(
+    (function Table(x) -> x),
+    (fun _ x -> Table(x))
+)
+let tablerow = Lense(
+    (function TableRow(x) -> x),
+    (fun _ x -> TableRow(x))
+)
+
+get_func (body .> main_lense 2 .> table .> main_lense 1 .> tablerow .> main_lense 1) doc
+```
+
 ### Бонусы \7
 > Тут чисто тезисно, пока не понадобится в использовании, так как на экзамен вряд ли будет вынесено, но чисто идейно может пригодиться.
-
-Существуют асинхронные агенты. Если подробней интресно то [вот урок](https://www.youtube.com/watch?v=1I9kNSC1a-0&list=PL6XUtJhtlpPM3-1zyn5Ks6n7UB6gs38RS&index=37), пока не вижу смысл в углублении таком
 
 ```fsharp
 // there will be code (maybe )
@@ -1014,4 +1266,4 @@ let mood (s:string) =
             | Negative -> z-1
             | Neutral -> z) 0
 ```
-Далее упомяну, что шаблоны могут использоваться в регулярных выражениях, если вдруг понадобится есть в лекции 7.2. Ну и есть инструмент для графиков FsharpChart
+Далее упомяну, что шаблоны могут использоваться в регулярных выражениях. Есть инструмент для графиков FsharpChart

@@ -187,3 +187,74 @@ Some(1) >>= bad  >>= good // None
 
 Оптика - набор функциональных абстракций позволяющих работать со сложными структурами данных
 Линзы решают задачу выделения конкретного места в какой-то структуре данных
+
+Пример линз с применением
+```fsharp
+type Content = 
+    | String of string 
+    | Body of Content list
+    | Collection of Content list
+    | Paragraph of Content
+    | Header of int * Content
+    | Bold of Content
+    | ItemList of Content
+    | TableRow of Content list
+    | Table of Content list
+
+let doc = Body([
+    Header(1, String "title");
+    Paragraph(String("This is introduction"));
+    Table([
+        TableRow([String("Item 1"); String("$1")]);
+        TableRow([String("Item 2"); String("$2")]);
+        ])
+])
+
+// пример для списка
+type Get_function<'t, 'a> = ('t -> 'a)
+type Update_function<'t, 'a> = ('t -> 'a -> 't) 
+type Lense<'t, 'a> =  Get_function<'t, 'a> * Update_function<'t, 'a>
+
+
+let get_func lense position = fst lense position
+let update_func lense position = snd lense position
+
+let main_lense n = Lense(
+    (fun (lst:List<'t>) -> lst.[n]),
+    (fun lst new_element -> List.mapi (fun i t -> if i=n then new_element else t) lst)
+)
+
+let lst = [1..10]
+get_func (main_lense 2) lst
+let lst' = update_func (main_lense 2) lst -5
+get_func (main_lense 2) lst'
+
+let inline (.>) (xget, xset) (yget, yset) = 
+   (xget >> yget), 
+   (fun matrix element -> xset matrix (yset (xget matrix) element))
+
+
+let mtx = [[1; 2; 3; 4; 5]; [6; 7; 8; 9; 10]]
+get_func (main_lense 1 .> main_lense 1) [[1; 2; 3; 4; 5]; [6; 7; 8; 9; 10]]
+update_func (main_lense 1 .> main_lense 1) [[1; 2; 3; 4; 5]; [6; 7; 8; 9; 10]] 0
+
+
+let body = Lense(
+    (function Body(x) -> x),
+    (fun _ x -> Body(x))
+)
+let par = Lense(
+    (function Paragraph(x) -> x),
+    (fun _ x -> Paragraph(x))
+)
+let table = Lense(
+    (function Table(x) -> x),
+    (fun _ x -> Table(x))
+)
+let tablerow = Lense(
+    (function TableRow(x) -> x),
+    (fun _ x -> TableRow(x))
+)
+
+get_func (body .> main_lense 2 .> table .> main_lense 1 .> tablerow .> main_lense 1) doc
+```
