@@ -58,7 +58,7 @@ pre 2
 Тут наглядно видно что технически мы не применяем аргументы, а сначала создаём функцию которая подставляет на место первого 1, а затем можно подставить другое число. Те можно понять как частичное выполнение функций, или подстановку в макрос. Также можно представить excel таблицу, где формулы к ячейкам применяются аналогично.
 
 ```fsharp
-// если представить как лямбда выраждение становится очевидным как работает
+// если представить как лямбда выраждение становится очевидным как работает карирование
 let plus = fun x -> (fun y -> x + y)
 ```
 > Если в функцию передавать один аргумент, то она уже не карируется, а выполняется, а кортеж является одним элементом
@@ -126,11 +126,13 @@ sin 0.5
 
 Редукция специальных функций называется Delta-редукцией (замена функции)
 
+<br>
 В F# энергичный (аппликативный порядок редукции) 
-При том, аппликативная редукция не всегда приводит к результату, а может приводить к зацикливанию (подробнее где-то в теории, которую не осветили)
+При том, аппликативная редукция не всегда приводит к результату, а может приводить к зацикливанию.
+
 ```fsharp
-(fun x -> x + 1) (2*3)// мы посчитаем сначала x=6
-// в нормальном мы сначала подставим x=2*3, 
+(fun x -> x * 2) (2*3) // мы посчитаем сначала x=6
+// в нормальном (ленивом ((не F#)))  мы сначала подставим x=2*3, 
 // а лишь в конце будем всё вычислять
 ```
 
@@ -150,6 +152,16 @@ let (>|) f x = f x
 Пример
 
 ```fsharp
+//Комбинатор
+let combine f g x = f (g x) // <<
+
+let addOne x = x + 1
+let double x = x * 2
+
+let addOneThenDouble = combine double addOne
+
+printfn "%d" (addOneThenDouble 3)
+
 // все эквивалентны 
 let f x = 2 * x + 1
 let f = fun x -> 2 * x + 1
@@ -172,6 +184,7 @@ let name = Desc("Ivan")
 ```
 
 Option тип возвращает либо значение, если оно получено, либо None. Другими словами, это тип, который в зависимости от условий может принимать различные подтипы.
+
 ```fsharp
 // уже в языке
 type 'T option =
@@ -182,9 +195,10 @@ type 'T option =
 type option<'T> =
     | Some of 'T
     | None
-
 ```
+
 Удобно создавать свои типы, что бы обрабатывать выходные значения функций.
+
 ```fsharp
 type SolveResult =
     | None
@@ -202,7 +216,6 @@ let solve a b c =
         Quadratic(((-b + sqrt (D)) / (2. * a), (-b - sqrt (D)) / (2. * a)))
 
 let x = solve 1. 2. -3.
-
 ```
 
 Формальные выводы:
@@ -230,7 +243,7 @@ let print r =
     match r with
         | None -> printfn "No Solutions"
         | Linear(x) -> printfn "x=%f" x
-        | Quadratic(x1, x2) when x1=x2-> printfn "x1=x2=%f" x1 // условие
+        | Quadratic(x1, x2) when x1=x2 -> printfn "x1=x2=%f" x1 // условие
         | Quadratic(x1, x2) -> printfn "x1=%f, x2=%f" x1 x2
         | _ -> printfn "Not expected?" // пример else
 
@@ -239,7 +252,7 @@ print x // или можно так solve 1. 2. -3. |> print
 
 Однако не обязательно явно использовать оператор match, можно сделать тоже самое с помощью function:
 ```fsharp
-let print r = function
+let print = function
         | Linear(x) -> printfn "x=%f" x
         | Quadratic(x1, x2) when x1=x2-> printfn "x1=x2=%f" x1
         | Quadratic(x1, x2) -> printfn "x1=%f, x2=%f" x1 x2
@@ -248,13 +261,15 @@ let print r = function
 print x
 ```
 От сюда возникает вопрос в отличии задания анонимных функций с помощью `function` и `fun`
-fun vs. function
+
+fun vs. function:
+
 `fun`
 + Поддерживает несколько аргументов в каррированной форме: fun xу-> ...
 + Не поддерживает pattern matching function
 
 `function`
-+ Поддерживает только один аргумент (возможно, tuple)
++ Поддерживает только один аргумент (например tuple)
 + Поддерживает pattern matching с несколькими вариантами описания
 
 Пример сопоставления пар:
@@ -298,7 +313,6 @@ let rec factorial = function
     | 1 -> 1
     | n -> n * factorial(n-1)
 
-
 factorial 5
 ```
 
@@ -338,9 +352,6 @@ get_length 0 otf  // 3
 
 ```
 
-> Задание для отработки сортировка и вставка с сохранением порядка, если не забуду вставлю тут под спойлер
-
-
 ```fsharp
 // Стандартное обозначение списка на F#
 type 'a list = 
@@ -358,6 +369,7 @@ let squares = [   for i in 1 .. 20 do
 
 
 Свёртка (fold) в F# - это функция высшего порядка, которая применяет некоторую операцию к элементам списка, последовательно сворачивая его до одного значения. Эта операция может быть суммированием, умножением, конкатенацией или любой другой операцией, определенной пользователем.
+
 ```fsharp
 val List.fold : ('State -> 'T -> 'State) -> 'State -> 'T list -> 'State
 ```
@@ -371,7 +383,6 @@ let rec fold_ f i = function
         let t = List.tail list
         let h = List.head list
         f (fold_ f i t) h
-
 
 fold_ (+) 0 [1..100]
 ```
@@ -411,6 +422,17 @@ let f x acc = x::acc
 let filteredList = List.foldBack f [1..10] [11..20] 
 
 printfn "%A" filteredList
+
+// или
+let a = [1..10]
+let b = [11..2..180]
+
+let rec concat lst1 = function
+    |[] -> lst1
+    |h::t -> concat (lst1@[h]) t
+    
+printfn "%A" (concat a b)
+
 ```
 
 ##### Основные функции списков
@@ -426,7 +448,7 @@ printfn "%A" filteredList
 | ` List.rev `   | Реверсирование списка   |
 | ` List.zip `   | Принимает 2 списка одной длины, и делает список кортежей    |
 | ` List.filter `   | Новый список по старому, где выполнено условие |
-| `List.parition`   | Два списка из исходного. Первый, где функция `true`, второй где `false`    |
+| `List.partition`   | Два списка из исходного. Первый, где функция `true`, второй где `false`    |
 | ` List.map`   | Применяет функцию к каждому элементу списка   |
 | ` List.mapi`   | Применяет функцию к каждому элементу списка, у функции как параметр есть индекс   |
 | ` List.init `   | Задание списка c длиной и функцией от индекса    |
@@ -441,7 +463,7 @@ List.init 9 (fun x->2.*float(x))
 ```
 **Немного примеров:**
 
-Пример реализации поиска среднего значения в списке
+Пример реализации вычисление среднего арифметического значения в списке
 ```fsharp
 let lst = [1..100]
 
@@ -568,10 +590,11 @@ let tr = Node(1,
 ```
 
 Свёртка и отображение (map), достаточно тривиальны:
+
 ```fsharp
 // отображение
 let rec map f = function
-    | Leaf(x)  -> Leaf(f, x)
+    | Leaf(x) -> Leaf(f x)
     | Node(x, l) ->
         Node (f x,  List.map (map f ) l)
 
@@ -582,9 +605,8 @@ let rec fold f i = function
         List.fold (fold f) (f i x) l
 ```
 
-Абстрактное синтаксическое дерево. Это максимально похоже на задание курсовой 
+Абстрактное синтаксическое дерево. Это максимально похоже на задание курсовой
 ```fsharp
-//  самое интересное что оно работает!
 type 't Expr =
     | Add of 't Expr * 't Expr
     | Sub of Expr<'t> * Expr<'t>
@@ -602,7 +624,7 @@ compute(Add(Neg(Value(5)), Sub(Value(5),Value(1)))) // -5 + 5 - 1 = -1
 
 Также существуют двоичные деревья. Любое дерево общего вида может быть преобразовано к двоичному
 
-#### Структуры продолжение 
+#### Структуры - продолжение 
 
 Реализация наивной очереди
 
@@ -640,7 +662,8 @@ let put x (L, R) =
 let empty = ([],[])
 ```
 
-Zippers - аналог двунаправленных списков, идейно похоже на умную очередь.
+Zippers - аналог двунаправленных списков, где мы смортим на 1 элемент и имеем опрерации сдвигов.
+
 ```fsharp
 type 't ZipperList = 't list * 't list
 
@@ -811,13 +834,8 @@ seq {for x in 1..10 do
 
 ```
 
-
 ```fsharp
-// do 5.3 lesson (13:00)
-
-```
-```fsharp
-// способы задать факториал, это ответ на 1 из
+// способы задать факториал
 
 let fact n =  [1..n] |> List.reduce (*)
 
@@ -829,7 +847,7 @@ let fact  = (..) 1 >> Seq.reduce (*)
 let fact n = Seq.initInfinite ((+) 1) |> Seq.scan (*) 1 |> Seq.nth n
 ```
 
-Корекурсия - определение рекуррентной бесконечной последовательности структурно эквивалентное рекурсии. Обычно пораждает бесконечные последовательности
+Корекурсия - определение рекуррентной бесконечной последовательности структурно эквивалентное рекурсии.
 
 ```fsharp
 // пример определения корекурсии
@@ -845,8 +863,7 @@ ones |> Seq.take 10 //1 1 1..
 // ещё пример определения корекурсии
 let rec nat = seq{
     yield 0
-    yield! 
-        Seq.map ((+) 1) nat
+    yield! Seq.map ((+) 1) nat
 }
 
 nat |> Seq.take 10 // 0..10
@@ -871,6 +888,7 @@ let len L =
 Далее, Мемоизация - запоминание вычесленных значений, для оптимизации. Применимо когда каждому входному -> единственное выходное всегда. 
 
 Мы жертвуем памятью на скорость. Данный приём иногда применяется в добрых алгоритмах (в том числе на олл проге).
+
 ```fsharp
 // вот общая идея
 open System.Collections.Generic
@@ -954,19 +972,115 @@ type NondetBuilder() =
 let nondet = new NondetBuilder()
 
 let r = nondet {
-        let! vas = [ 14; 15 ]
-        let! pet = [ 2 * vas; 3 * vas ]
+        let! vas = [14; 15]
+        let! pet = [2 * vas; 3 * vas]
         let lena = pet + 1
         return lena
     }
-
 ```
+
 `let!` показывает что должен сработать оператор Bind, что можно понимать как распаковку объекта
 
 + Монада (нестрого) - некоторый обрамляющий тип + набор специальных операций.
 + Монада позволяет описывать в явном виде последовательность некоторых операций, семантику выполнения которых мы можем менять.
 
-Теория категорий, типизация и функциональное программирование
+
+Хороший пример для понимания:
+```fsharp
+type ResultBuilder() =
+    member _.Bind(x, f) = 
+        match x with
+        | Some(v) -> f v
+        | None -> None
+    member _.Return(v) = Some(v)
+
+let result = ResultBuilder()
+
+let computation = result {
+    let! x = Some(2)
+    do! if x > 5 then Some () else None
+    let! y = Some(20)
+    return x + y
+}
+
+printfn "%A" computation
+```
+Аналог:
+```fsharp
+type OptionBuilder() =
+    member _.Return(x) = Some x
+    member _.Bind(m, f) = 
+        match m with
+        | Some x -> f x
+        | None -> None
+
+let option = OptionBuilder()
+
+
+let computation = 
+    option.Bind(Some 10, 
+        fun a -> option.Bind(Some 20, 
+            fun b ->option.Return(a + b)))
+```
+
+`do!` - делает что то, а значение используется для проверки в цепочке выражения
+
+
+Монада Writer - записывает логи по ходу выполнения
+```fsharp
+let add x y =
+    writer {
+        do! writer.Tell (sprintf "Log...%A %A" x y)
+        return x + y
+    }
+```
+
+```fsharp
+// пример реализации
+type Writer<'t> = 't*string
+
+type WriterBuilder() = 
+    member m.Run (t,s) = (t,s) 
+    member m.Tell (s:string) = ((),s)
+    member m.Bind(x,f) =
+        let (v,s:string) = m. 
+        Run x let (v',s') = m.Run (f v) 
+        (v',s+s')
+    member m.Return x = (x,"")
+
+let writer = new WriterBuilder()
+```
+Монада ввода вывода - записывает логи по ходу выполнения
+Монада состояния - позволяет сохранить состояние, имеет методы get, set
+```fsharp
+type State <'s, 't> = 's -> 't* 's
+type StateBuilder() = 
+    member m.Bind(x, f) = 
+        (fun s0 -> 
+        let a, s = x s0 
+        f a s)
+    member m.Return a = (fun s -> a, s)
+    member m.Zero() = m.Return()
+
+let state = new StateBuilder()
+
+let getState = (fun s -> s, s)
+let setState s = (fun _ -> (s), s)
+```
+
+Монада продолжений
+```fsharp
+type ContinuationBuilder() =
+    member this.Bind (m, f) =
+        fun c -> m (fun a -> f a c)
+    member this.Return x = fun k -> k x
+
+let cont = ContinuationBuilder()
+```
+
+Также монады можно использовать для параллейных вычислений и парсеров (Fparsec работает схоже (вспоминаем синтаксис))
+
+#### Теория категорий, типизация и функциональное программирование
 + Взгляд на теорию функционального программирования на основе очень абстрактного математического понятия
 + Изучает взаимосвязь понятий без привязки к их внутренней структуре
 + Применяется в: 
@@ -974,14 +1088,12 @@ let r = nondet {
     - Теоретической физике
     - Информатике
 
-Категории
+##### Категории
 Определение - это семейство объектов Ob(K), и семейство морфизмов ("стрелок") Mor(K)
-- ∀ f : A → B, g: B → C  $\exists$ g $\circ$ f : A → C (композиция)
-- ∀ A ∈ Ob(K), $\exists$ Id$_{A}$: A → A (единичная стрелка)
-- ∀ f, g, h ∈ Mor(K): (f $\circ$ g) $\circ$ h = f $\circ$ (g $\circ$ h) (ассоциативность)
-- ∀ f : A → B имеет место f $\circ$ Id$_{A}$ = Id$_{B}$ $\circ$ f = f (свойство единицы)
-
-// TODO: картиночка
+- $\forall f : A \to B, g: B \to C, \exists g \circ f : A \to C$ (композиция)
+- $\forall A \in \text{Ob}(K), \exists \text{Id}_A: A \to A$ (единичная стрелка)
+- $\forall f, g, h \in \text{Mor}(K): (f \circ g) \circ h = f \circ (g \circ h)$ (ассоциативность)
+- $\forall f : A \to B$ имеет место $f \circ \text{Id}_A = \text{Id}_B \circ f = f$ (свойство единицы)
 
 Примеры категорий:
 + Категория из одного объекта
@@ -990,9 +1102,9 @@ let r = nondet {
 + Категория всех множеств Set (каждый объект множество, "стрелки" - функции)
 + Категория всех типов\функций ЯП (надо рассматривать возможную незавершимость функций)
 
-Двойственные категории - такие категории, что "стрелки" повернули наоборот. Удобны для доказательств (по двойственности... ).
-+ Ob(K) = Ob($K_{duo}$)
-+ ∀ f : A → B ∈ Mor(K), $\exist$f: B → A  ∈ Mor($K_{duo}$)
+**Двойственные категории** - такие категории, что "стрелки" повернули наоборот. Удобны для доказательств (по двойственности... ).
++ $Ob(K) = Ob(K_{duo})$
++ $\forall f : A \rightarrow B \in  Mor(K), \exist g: B \rightarrow A \in Mor(K_{duo})$
 
 Начальный и терминальный объект
 - $A \in Ob(K)$ - начальный объект, если $\forall B \in Ob(K) \ \exists ! f : A \rightarrow B$ 
@@ -1004,7 +1116,7 @@ let r = nondet {
 + absurd: void $\rightarrow$ 't - начальный
 + unit: `let Unit _ = ()`
 
-Функторы
+**Функторы**
 
 - Функтор $F$ – это отображение двух категорий $K_1$ и $K_2$
 - Функтор должен сохранять свойства композиции
@@ -1036,11 +1148,13 @@ List.map
 ```fsharp
 Tree Map
 ```
+</br>
 </details>
 
+</br>
 Функтор отображающий категорию в саму в себя, называется <u><b>эндофунктором</u></b>
 
-Функтор Some на f#:
+Функтор Some на F#:
 ```fsharp
 let fmap f = function
     | None -> None
@@ -1052,9 +1166,9 @@ let ($) f x = fmap f x // производит лифтинг?
 (+) 1 $ Some(10) 
 
 ```
-Лифтинг - подъём на уровень функтора (5 -> 6 : Some(5) -> Some(6)). Те повышение абстрактности.
+**Лифтинг** - подъём на уровень функтора `(5 -> 6 : Some(5) -> Some(6))`. Те повышение абстрактности.
 
-Аппликативные функторы - функторы, для которых мы рассматриваем исходные фукнкции в пространстве функторного типа
+**Аппликативные функторы** - функторы, для которых мы рассматриваем исходные фукнкции в пространстве функторного типа
 
 ```fsharp
 let (<*>) f x = // example
@@ -1065,19 +1179,21 @@ let (<*>) f x = // example
 
 (Some (+)) <*> Some(1) <*> Some(2) // Some 3
 ```
+
 `Some((+))` - можно записать как функцию `Pure(f)`, которая будет поднимать функции
 
 ```fsharp
 let (<!>) a b =
-    let mas = (fun f -> List.map f b) // для другой функции на вход, вернёт список, где для каждого элемента применит входную функцию
-    let first = List.map mas a // применим для списка a
-    first |> List.concat 
+// для другой функции на вход, вернёт список, где для каждого элемента применит входную функцию
+    let funct = (fun f -> List.map f b) 
+    let lst = List.map funct a // применим для списка a
+    lst |> List.concat 
 
-let res = [(+)1;(-)1] <!> [1;2]
+let res = [(+)1;(+)(-1)] <!> [1;2]
 printfn "%A" res
 
 let pure f = [f]
-pure (+) <!> [1..2] <!> [3..4]
+pure (+) <!> [-1;-2] <!> [3..4]
 ```
 
 Задача. Надо расставить знаки(+,-,\*) между числами в списке, и посчитать все возможные значения. `[1;2] -> [1*2;1-2;1+2]`
@@ -1100,8 +1216,7 @@ let rec values = function
 
 ```
 
-Произведения и ко-произведения.
-### Категориальное определение пары
+##### Категориальное определение пары
 
 - Произведение $A, B \in Ob(K)$ это:
   - Объект $C \in Ob(K)$
@@ -1109,7 +1224,7 @@ let rec values = function
 
 - При этом $\forall D \in Ob(K)$ и $g_1 : C \rightarrow A$, $g_2 : C \rightarrow B$ $\exists ! f : D \rightarrow C$
 
-- В категории Set произведение – это $A \times B$
++ В категории Set произведение – это $A \times B$
 
 *Произведение определяется с точностью до изоморфизма*
 
@@ -1143,8 +1258,8 @@ Some(1) >>= good // Some(2)
 Some(1) >>= bad  >>= good // None
 ```
 
-Те это такая штука, которая за нас обработает данные, если они станут плохими в какой то момент, убирая большую вложенность блоков `if-else`
-Математически называется категория Клейси(>=>(fish operator)), отличие с bind(>>=), что на вход уже подаётся обёрнутое значение.
+Т.Е. это такая штука, которая за нас обработает данные, на случай если они станут плохими в какой то момент, убирая большую вложенность блоков `if-else`
+Математически называется категория Клейси(`>=>`(fish operator)), отличие с bind(`>>=`), что на вход уже подаётся обёрнутое значение.
 
 Сравнение 
 |Название|Функция|
@@ -1153,10 +1268,14 @@ Some(1) >>= bad  >>= good // None
 |Аппликативный функтор|`<*> : F (a -> b) -> F a -> F b` <br>`pure f : (a -> b) -> F(a -> b)`|
 |Монада|`>>= : M a -> (a -> M b) -> M b` <br>`>=> : (a -> M b) -> (b -> M c) -> (a -> M c)` <br> `return: a -> M a`|
 
-Оптика - набор функциональных абстракций позволяющих работать со сложными структурами данных
-Линзы решают задачу выделения конкретного места в какой-то структуре данных
+</br>
 
-Пример линз с применением
+#### Оптика
+**Оптика** - набор функциональных абстракций позволяющих работать со сложными структурами данных
+
+**Линзы** решают задачу выделения конкретного места в какой-то структуре данных
+
+Примеры линз с применением
 ```fsharp
 type Content = 
     | String of string 
@@ -1184,18 +1303,19 @@ type Update_function<'t, 'a> = ('t -> 'a -> 't)
 type Lense<'t, 'a> =  Get_function<'t, 'a> * Update_function<'t, 'a>
 
 
-let get_func lense position = fst lense position
-let update_func lense position = snd lense position
+let get_func lense lst = fst lense lst
+let update_func lense lst = snd lense lst 
 
-let main_lense n = Lense(
-    (fun (lst:List<'t>) -> lst.[n]),
-    (fun lst new_element -> List.mapi (fun i t -> if i=n then new_element else t) lst)
+let list_lense n = Lense(
+    (fun (lst:List<'t>) -> lst.[n]),// get
+    (fun lst new_element -> List.mapi (fun i t -> if i=n then new_element else t) lst) // update
 )
 
-let lst = [1..10]
-get_func (main_lense 2) lst
-let lst' = update_func (main_lense 2) lst -5
-get_func (main_lense 2) lst'
+let lst = [0..10]
+get_func (list_lense 4) lst
+
+let lst' = update_func (list_lense 2) lst -5
+get_func (list_lense 2) lst'
 
 let inline (.>) (xget, xset) (yget, yset) = 
    (xget >> yget), 
@@ -1203,8 +1323,8 @@ let inline (.>) (xget, xset) (yget, yset) =
 
 
 let mtx = [[1; 2; 3; 4; 5]; [6; 7; 8; 9; 10]]
-get_func (main_lense 1 .> main_lense 1) [[1; 2; 3; 4; 5]; [6; 7; 8; 9; 10]]
-update_func (main_lense 1 .> main_lense 1) [[1; 2; 3; 4; 5]; [6; 7; 8; 9; 10]] 0
+get_func (list_lense 0 .> list_lense 0) [[1; 2; 3; 4; 5]; [6; 7; 8; 9; 10]]
+update_func (list_lense 1 .> list_lense 1) [[1; 2; 3; 4; 5]; [6; 7; 8; 9; 10]] 0
 
 
 let body = Lense(
@@ -1224,17 +1344,12 @@ let tablerow = Lense(
     (fun _ x -> TableRow(x))
 )
 
-get_func (body .> main_lense 2 .> table .> main_lense 1 .> tablerow .> main_lense 1) doc
+get_func (body .> list_lense 2 .> table .> list_lense 1 .> tablerow .> list_lense 1) doc
 ```
 
 ### Бонусы \7
 > Тут чисто тезисно, пока не понадобится в использовании, так как на экзамен вряд ли будет вынесено, но чисто идейно может пригодиться.
 
-```fsharp
-// there will be code (maybe )
-// awaitig MR :)
-
-```
 
 Активные шаблоны
 
