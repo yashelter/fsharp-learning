@@ -1,6 +1,9 @@
----
-title : f#
----
+# О репозитории и авторах 
+Это конспект составленный [мной](https://github.com/yashelter) во время прохождения институтского курса функциононального программирования. Также тут можно найти работу <i><b>[по компилятору на F#](/fp-compiler-lab-starlight-sky/)</i></b>, к которому также приложили руку [ZBelka100](https://github.com/ZBelka100) и [MaximusPokeZ](https://github.com/MaximusPokeZ).
+Если у вас есть вопросы или предложения можете смело писать их в issues или мне лично в [![Telegram](https://img.shields.io/badge/telegram-%231DA1F2.svg?&logo=telegram)](https://t.me/yashelter)
+
+Если вам помог мой скромный труд, то пожалуйста поставьте звёздочку, мне будет приятно
+![Alt Text](/staff/yu.gif)
 ## Небольшое оглавление: 
 - [Некоторые полезные ссылки](#полезные-ссылки-0)
 - [Основы F#](#основы-f-1)
@@ -769,6 +772,8 @@ zip sample |> right |> left |> update '0' |> up |> up
 
 Важное преимущество : Zipper'ы позволяют модифицировать текущий, не перестраивая всей структуры
 
+![Котик](https://media.giphy.com/media/vFKqnCdLPNOKc/giphy.gif)
+
 ### Приёмы функционального программирования \5
 
 #### Замыкания
@@ -1396,3 +1401,5 @@ let tablerow = Lense(
 
 get_func (body .> list_lense 2 .> table .> list_lense 1 .> tablerow .> list_lense 1) doc
 ```
+
+![Гладить](/staff/cute.gif)
