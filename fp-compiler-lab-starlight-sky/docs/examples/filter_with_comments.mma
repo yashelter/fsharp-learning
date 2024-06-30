@@ -1,0 +1,13 @@
+lambda filter [f, c] = 
+{ 
+  if eq(c, catalog()) => catalog()
+  else
+    if $ f [c cfirst] => c cfirst ->> $ filter [f, c ctail] *  Hello 
+      World  
+    *
+    else $ filter [f, c ctail]
+}
+
+lambda t [x] = { lt(x, 5) }
+
+printfn $ filter [t, catalog (1 | 2 | 10)] 

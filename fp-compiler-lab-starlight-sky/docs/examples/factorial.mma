@@ -1,0 +1,4 @@
+lambda factorial [_x] = { if eq(   _x, 1         ) => 1 else mul(_x, $ factorial [sub( _x, 1)]) }
+
+printfn $ factorial [7]
+printfn $ factorial [8]

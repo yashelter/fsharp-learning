@@ -1,0 +1,13 @@
+detect a = catalog(1)
+detect b = catalog()
+
+lambda map [f, c] = 
+{ 
+ if eq(c, catalog()) => catalog () 
+ 
+ else $ f[c cfirst] ->> $ map [f, c ctail]
+}
+
+lambda t [x] = { mul(x, x) }
+
+printfn $ map [t, catalog (1 | 2 | 10)]

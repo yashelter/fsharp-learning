@@ -1,0 +1,5 @@
+detect _fl_var = 13 
+
+**
+
+printfn _fl_var

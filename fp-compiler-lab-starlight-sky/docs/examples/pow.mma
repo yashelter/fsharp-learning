@@ -1,0 +1,3 @@
+lambda pow [_x, n] = { if eq(   n, 1         ) => _x else mul(_x, $ pow [_x, sub(n, 1)]) }
+
+printfn $ pow [2, 10]

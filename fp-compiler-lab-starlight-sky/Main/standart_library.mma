@@ -1,0 +1,61 @@
+lambda factorial [_x] = { if eq(_x, 1) => 1 else mul(_x, $ factorial [sub( _x, 1)]) }
+
+lambda filter [f, c] = 
+{ 
+  if eq(c, catalog()) => catalog()
+  else
+    if $ f [c cfirst] => c cfirst ->> $ filter [f, c ctail] 
+    else $ filter [f, c ctail]
+}
+
+lambda map [f, c] = 
+{ 
+ if eq(c, catalog()) => catalog () 
+ 
+ else $ f[c cfirst] ->> $ map [f, c ctail]
+}
+
+lambda pow [_x, n] = { if eq( n, 1 ) => _x else mul(_x, $ pow [_x, sub(n, 1)]) }
+
+lambda max [a, b] = { if gt(a, b) => a else b}
+lambda min [a, b] = { if gt(a, b) => b else a}
+
+lambda get_length[cat] =
+{
+	if eq(cat, catalog()) => 0
+	else  add(1, $ get_length [cat ctail])
+}
+
+
+lambda catalog_at_index [y, need_index, current_index] ={
+	if eq(need_index, current_index) => y cfirst
+	else  $ catalog_at_index [y ctail, need_index, add(1, current_index)]
+}
+
+lambda at_index [cat, ind] = 
+{
+	if gt(ind, $ get_length[cat]) => "Cant get at index"
+	else $ catalog_at_index [cat, ind, 0]
+}
+
+lambda catalog_search_by [cat, funct, acc] = 
+{
+	if eq(cat, catalog()) => acc
+	else
+		if $funct [acc, cat cfirst] => 
+			$ catalog_search_by [cat ctail, funct, cat cfirst]
+		else 
+			 $ catalog_search_by [cat ctail, funct, acc]
+}
+
+lambda sum_catalog [cat] = 
+{
+  if eq(cat, catalog()) => 0
+  else add(cat cfirst, $ sum_catalog [cat ctail])
+}
+
+lambda catalog_fold [cat, funct, acc] = 
+{
+  if eq(cat, catalog()) => acc
+  else $funct [cat cfirst, $ catalog_fold[cat ctail, funct, acc]]
+}
