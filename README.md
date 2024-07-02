@@ -1164,7 +1164,7 @@ let cont = ContinuationBuilder()
 
 **Двойственные категории** - такие категории, что "стрелки" повернули наоборот. Удобны для доказательств (по двойственности... ).
 + $Ob(K) = Ob(K_{duo})$
-+ $\forall f : A \rightarrow B \in  Mor(K),$ $\exist g: B \rightarrow A \in Mor(K_{duo})$
++ $\forall f : A \rightarrow B \in  Mor(K),$ $\exist \text{g}: B \rightarrow A \in Mor(K_{duo})$
 
 Начальный и терминальный объект
 - $A \in Ob(K)$ - начальный объект, если $\forall B \in Ob(K) \ \exists ! f : A \rightarrow B$ 
